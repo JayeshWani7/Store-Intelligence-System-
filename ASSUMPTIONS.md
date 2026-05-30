@@ -274,6 +274,72 @@ Returns and corrections would require separate handling.
 
 ---
 
+## P1a — POS Dataset Contains Sales Only
+
+### Assumption
+
+The provided POS file contains only completed sales invoices.
+
+### Evidence
+
+The April 10 dataset shows `invoice_type = sales` for every row and no populated `return_id`.
+
+### Impact
+
+Conversion attribution can ignore return flows without distorting the numerator.
+
+### Risk If Wrong
+
+Medium.
+
+Undetected returns would inflate conversion and revenue metrics.
+
+---
+
+## P1b — POS Data Is Store-Scoped
+
+### Assumption
+
+All POS records in a file belong to a single store.
+
+### Evidence
+
+The sample file contains only `store_id = ST1008` and `store_name = Brigade_Bangalore`.
+
+### Impact
+
+Store-level metrics can be computed without cross-store disambiguation.
+
+### Risk If Wrong
+
+Low.
+
+Mixed-store files would require additional partitioning rules.
+
+---
+
+## P1c — POS Timestamps Are Reliable Within A Day
+
+### Assumption
+
+POS timestamps for a given day are internally consistent and usable for matching windows.
+
+### Evidence
+
+The sample file shows a single-day time range without gaps across the operating window.
+
+### Impact
+
+Time-based matching remains the primary conversion attribution method.
+
+### Risk If Wrong
+
+Medium.
+
+Clock drift or time zone errors could cause missed matches.
+
+---
+
 ## P2 — Time Correlation Is The Only Reliable Matching Signal
 
 ### Assumption

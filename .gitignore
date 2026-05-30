@@ -1,2 +1,18 @@
 /CCTV Footage
 FOLLOWUP_PREP.md
+*.xlsx
+*.csv
+/.venv
+__pycache__/
+*.py[cod]
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.env
+.env.*
+Thumbs.db
+.DS_Store
