@@ -18,7 +18,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--store-layout", default="store_layout.json", help="Layout JSON.")
     parser.add_argument("--store-id", default=None, help="Override store id.")
     parser.add_argument("--output", default="events.jsonl", help="Output JSONL file.")
-    parser.add_argument("--start-time", default=None, help="ISO-8601 UTC start time.")
+    parser.add_argument(
+        "--start-time",
+        default=None,
+        help="ISO-8601 UTC start time. Defaults to 1970-01-01T00:00:00Z if omitted.",
+    )
     parser.add_argument("--realtime", action="store_true", help="Sleep to match fps.")
     parser.add_argument("--dwell-interval", type=int, default=30, help="Dwell interval seconds.")
     parser.add_argument("--model", default="yolov8n.pt", help="YOLOv8 model path.")
@@ -28,6 +32,18 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--default-zone", default=None, help="Fallback zone id for unmatched detections.")
     parser.add_argument("--debug", action="store_true", help="Print debug stats while running.")
     parser.add_argument("--debug-every", type=int, default=30, help="Debug print every N frames.")
+    parser.add_argument("--ocr-timestamp", action="store_true", help="OCR timestamp overlay from frame.")
+    parser.add_argument(
+        "--ocr-region",
+        default=None,
+        help="OCR region as x,y,w,h in pixels (top-right if omitted).",
+    )
+    parser.add_argument("--ocr-every", type=int, default=30, help="OCR every N frames.")
+    parser.add_argument(
+        "--ocr-dump",
+        default=None,
+        help="Save the OCR crop image to this path for tuning.",
+    )
     return parser.parse_args()
 
 
@@ -35,11 +51,10 @@ def main() -> None:
     args = _parse_args()
     layout = load_layout(args.store_layout)
 
-    start_time = (
-        datetime.fromisoformat(args.start_time.replace("Z", "+00:00"))
-        if args.start_time
-        else datetime.now(timezone.utc)
-    )
+    if args.start_time:
+        start_time = datetime.fromisoformat(args.start_time.replace("Z", "+00:00"))
+    else:
+        start_time = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
     pipeline = DetectionPipeline(
         layout=layout,
@@ -56,6 +71,13 @@ def main() -> None:
         def on_event(event) -> None:
             handle.write(json.dumps(event.model_dump(mode="json")) + "\n")
 
+        ocr_region = None
+        if args.ocr_region:
+            parts = [int(part) for part in args.ocr_region.split(",")]
+            if len(parts) != 4:
+                raise ValueError("--ocr-region must be x,y,w,h")
+            ocr_region = tuple(parts)
+
         pipeline.run(
             video_path=args.video,
             start_time=start_time,
@@ -67,6 +89,10 @@ def main() -> None:
             default_zone_id=args.default_zone,
             debug=args.debug,
             debug_every=args.debug_every,
+            ocr_timestamp=args.ocr_timestamp,
+            ocr_region=ocr_region,
+            ocr_every=args.ocr_every,
+            ocr_dump_path=args.ocr_dump,
         )
 
 

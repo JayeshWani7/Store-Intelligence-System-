@@ -12,3 +12,4 @@ torch
 torchvision
 torchreid
 filterpy
+easyocr

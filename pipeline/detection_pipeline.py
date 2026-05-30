@@ -53,6 +53,10 @@ class DetectionPipeline:
         default_zone_id: Optional[str] = None,
         debug: bool = False,
         debug_every: int = 30,
+        ocr_timestamp: bool = False,
+        ocr_region: Optional[tuple[int, int, int, int]] = None,
+        ocr_every: int = 30,
+        ocr_dump_path: Optional[str] = None,
     ) -> List[DetectionEvent]:
         import cv2
         import numpy as np
@@ -67,6 +71,11 @@ class DetectionPipeline:
         frame_idx = 0
         events: List[DetectionEvent] = []
         track_states: Dict[int, TrackState] = {}
+        ocr_reader = None
+        last_ocr_text: Optional[str] = None
+        last_ocr_time: Optional[datetime] = None
+        last_ocr_frame_idx: Optional[int] = None
+        ocr_dumped = False
 
         def emit(event: DetectionEvent) -> None:
             events.append(event)
@@ -86,6 +95,33 @@ class DetectionPipeline:
 
             timestamp = start_time + timedelta(seconds=frame_idx / fps)
             frame_idx += 1
+
+            if ocr_timestamp and frame_idx % max(ocr_every, 1) == 0:
+                if ocr_reader is None:
+                    import easyocr
+
+                    ocr_reader = easyocr.Reader(["en"], gpu=False)
+                ocr_text, ocr_crop = _extract_timestamp_text(
+                    frame,
+                    ocr_reader,
+                    region=ocr_region,
+                )
+                if ocr_dump_path and not ocr_dumped and ocr_crop is not None:
+                    import cv2
+
+                    cv2.imwrite(ocr_dump_path, ocr_crop)
+                    ocr_dumped = True
+                last_ocr_text = ocr_text or last_ocr_text
+                parsed = _parse_timestamp_text(last_ocr_text)
+                if parsed is not None:
+                    last_ocr_time = parsed
+                    last_ocr_frame_idx = frame_idx
+                if debug:
+                    print(f"ocr_text='{ocr_text}' parsed={parsed}")
+
+            if last_ocr_time is not None and last_ocr_frame_idx is not None:
+                offset_seconds = (frame_idx - last_ocr_frame_idx) / fps
+                timestamp = last_ocr_time + timedelta(seconds=offset_seconds)
 
             results = model(frame, verbose=False)[0]
             if results.boxes is None or len(results.boxes) == 0:
@@ -329,3 +365,70 @@ def _sleep_frame(fps: float) -> None:
 
     delay = 1.0 / max(fps, 1.0)
     time.sleep(delay)
+
+
+def _extract_timestamp_text(
+    frame,
+    reader,
+    region: Optional[tuple[int, int, int, int]] = None,
+) -> tuple[str, Optional[object]]:
+    import cv2
+
+    height, width = frame.shape[:2]
+    if region is None:
+        # Default to top-right 25% width and 15% height
+        x = int(width * 0.75)
+        y = int(height * 0.0)
+        w = int(width * 0.25)
+        h = int(height * 0.15)
+    else:
+        x, y, w, h = region
+
+    x = max(0, min(x, width - 1))
+    y = max(0, min(y, height - 1))
+    w = max(1, min(w, width - x))
+    h = max(1, min(h, height - y))
+
+    crop = frame[y : y + h, x : x + w]
+    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+    return " ".join(reader.readtext(gray, detail=0)), crop
+
+
+def _parse_timestamp_text(text: Optional[str]) -> Optional[datetime]:
+    if not text:
+        return None
+
+    import re
+    from datetime import timezone
+
+    cleaned = (
+        text.replace("|", ":")
+        .replace(";", ":")
+        .replace("*", ":")
+        .replace("'", "")
+        .replace("O", "0")
+        .replace("o", "0")
+        .replace("S", "5")
+        .strip()
+    )
+
+    # Fix OCR variant: '10/0412026' -> '10/04/2026' (extra '1' between month and year).
+    cleaned = re.sub(r"(\d{2})/(\d{2})1(\d{4})", r"\1/\2/\3", cleaned)
+    # Fix OCR variant: '10/042026' -> '10/04/2026' (missing slash before year).
+    cleaned = re.sub(r"(\d{2})/(\d{2})(\d{4})", r"\1/\2/\3", cleaned)
+    # Normalize time separators like '20:09.45' -> '20:09:45'.
+    cleaned = re.sub(r"(\d{2}:\d{2})[\.:](\d{2})", r"\1:\2", cleaned)
+
+    for fmt in (
+        "%Y-%m-%d %H:%M:%S",
+        "%Y/%m/%d %H:%M:%S",
+        "%d-%m-%Y %H:%M:%S",
+        "%d/%m/%Y %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y/%m/%d %H:%M",
+    ):
+        try:
+            return datetime.strptime(cleaned, fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+    return None
