@@ -1,0 +1,142 @@
+{
+  "store_id": "STORE_BLR_002",
+  "image": {
+    "path": "layout.png",
+    "width": 973,
+    "height": 479
+  },
+  "zones": [
+    {
+      "zone_id": "ENTRY_THRESHOLD",
+      "label": "Entry Threshold",
+      "type": "entry",
+      "polygon": [[0, 250], [120, 250], [120, 470], [0, 470]]
+    },
+    {
+      "zone_id": "FOH",
+      "label": "Front Of House",
+      "type": "floor",
+      "polygon": [[200, 120], [780, 120], [780, 360], [200, 360]]
+    },
+    {
+      "zone_id": "NAIL_UNIT",
+      "label": "Nail Unit",
+      "type": "fixture",
+      "polygon": [[320, 170], [360, 170], [360, 250], [320, 250]]
+    },
+    {
+      "zone_id": "MAKEUP_UNIT",
+      "label": "Makeup Unit",
+      "type": "fixture",
+      "polygon": [[450, 210], [560, 210], [560, 310], [450, 310]]
+    },
+    {
+      "zone_id": "BILLING",
+      "label": "Cash Counter",
+      "type": "billing",
+      "polygon": [[830, 160], [900, 160], [900, 290], [830, 290]]
+    },
+    {
+      "zone_id": "BILLING_QUEUE",
+      "label": "Billing Queue",
+      "type": "queue",
+      "polygon": [[780, 130], [920, 130], [920, 340], [780, 340]]
+    },
+    {
+      "zone_id": "EB_KOREAN",
+      "label": "EB Korean",
+      "type": "brand",
+      "polygon": [[150, 40], [235, 40], [235, 90], [150, 90]]
+    },
+    {
+      "zone_id": "THE_FACE_SHOP",
+      "label": "The Face Shop",
+      "type": "brand",
+      "polygon": [[240, 40], [325, 40], [325, 90], [240, 90]]
+    },
+    {
+      "zone_id": "GOOD_VIBES",
+      "label": "Good Vibes",
+      "type": "brand",
+      "polygon": [[330, 40], [415, 40], [415, 90], [330, 90]]
+    },
+    {
+      "zone_id": "DERMDOC",
+      "label": "DermDoc",
+      "type": "brand",
+      "polygon": [[420, 40], [505, 40], [505, 90], [420, 90]]
+    },
+    {
+      "zone_id": "MINIMALIST",
+      "label": "Minimalist",
+      "type": "brand",
+      "polygon": [[510, 40], [595, 40], [595, 90], [510, 90]]
+    },
+    {
+      "zone_id": "AQUALOGICA",
+      "label": "Aqualogica",
+      "type": "brand",
+      "polygon": [[600, 40], [685, 40], [685, 90], [600, 90]]
+    },
+    {
+      "zone_id": "LAKME_SKIN",
+      "label": "Lakme Skin",
+      "type": "brand",
+      "polygon": [[690, 40], [775, 40], [775, 90], [690, 90]]
+    },
+    {
+      "zone_id": "ACCESSORIES",
+      "label": "Accessories",
+      "type": "brand",
+      "polygon": [[780, 40], [865, 40], [865, 90], [780, 90]]
+    },
+    {
+      "zone_id": "MAYBELLINE",
+      "label": "Maybelline",
+      "type": "brand",
+      "polygon": [[120, 400], [210, 400], [210, 455], [120, 455]]
+    },
+    {
+      "zone_id": "FACES_CANADA",
+      "label": "Faces Canada",
+      "type": "brand",
+      "polygon": [[215, 400], [305, 400], [305, 455], [215, 455]]
+    },
+    {
+      "zone_id": "LAKME",
+      "label": "Lakme",
+      "type": "brand",
+      "polygon": [[310, 400], [400, 400], [400, 455], [310, 455]]
+    },
+    {
+      "zone_id": "COLORBAR_SUGAR",
+      "label": "Colorbar + Sugar",
+      "type": "brand",
+      "polygon": [[405, 400], [495, 400], [495, 455], [405, 455]]
+    },
+    {
+      "zone_id": "SWISS_BEAUTY",
+      "label": "Swiss Beauty",
+      "type": "brand",
+      "polygon": [[500, 400], [590, 400], [590, 455], [500, 455]]
+    },
+    {
+      "zone_id": "RENEE_NY_BAE",
+      "label": "Renee NY Bae",
+      "type": "brand",
+      "polygon": [[595, 400], [685, 400], [685, 455], [595, 455]]
+    },
+    {
+      "zone_id": "ALPS_GOODNESS",
+      "label": "Alps Goodness",
+      "type": "brand",
+      "polygon": [[690, 400], [780, 400], [780, 455], [690, 455]]
+    },
+    {
+      "zone_id": "STREAX",
+      "label": "Streax",
+      "type": "brand",
+      "polygon": [[785, 400], [875, 400], [875, 455], [785, 455]]
+    }
+  ]
+}

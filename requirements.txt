@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+pytest
+pandas
+openpyxl
+pillow
+ultralytics
+opencv-python
+supervision
+torch
+torchvision
+torchreid
+filterpy

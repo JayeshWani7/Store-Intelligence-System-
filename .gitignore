@@ -16,3 +16,6 @@ htmlcov/
 .env.*
 Thumbs.db
 .DS_Store
+*.png
+*.jsonl
+*.pt

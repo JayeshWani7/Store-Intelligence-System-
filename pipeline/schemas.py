@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Literal, Optional, Type
 from uuid import UUID
 
-from pydantic import BaseModel, Field, conint, confloat, validator
+from pydantic import BaseModel, ConfigDict, Field, conint, confloat, field_validator
 
 
 class EventType(str, Enum):
@@ -24,55 +24,41 @@ class EventType(str, Enum):
 class EntryPayload(BaseModel):
     entry_point: Optional[str] = None
     confidence: Optional[confloat(ge=0.0, le=1.0)] = None
-
-    class Config:
-        extra = "ignore"
+    model_config = ConfigDict(extra="ignore")
 
 
 class ExitPayload(BaseModel):
     exit_point: Optional[str] = None
     confidence: Optional[confloat(ge=0.0, le=1.0)] = None
-
-    class Config:
-        extra = "ignore"
+    model_config = ConfigDict(extra="ignore")
 
 
 class ZonePayload(BaseModel):
     zone_name: Optional[str] = None
-
-    class Config:
-        extra = "ignore"
+    model_config = ConfigDict(extra="ignore")
 
 
 class ZoneDwellPayload(BaseModel):
     zone_name: Optional[str] = None
     dwell_seconds: conint(ge=0)
-
-    class Config:
-        extra = "ignore"
+    model_config = ConfigDict(extra="ignore")
 
 
 class BillingQueueJoinPayload(BaseModel):
     queue_depth: conint(ge=0)
-
-    class Config:
-        extra = "ignore"
+    model_config = ConfigDict(extra="ignore")
 
 
 class BillingQueueAbandonPayload(BaseModel):
     queue_depth: conint(ge=0)
     wait_seconds: conint(ge=0)
-
-    class Config:
-        extra = "ignore"
+    model_config = ConfigDict(extra="ignore")
 
 
 class ReentryPayload(BaseModel):
     gap_seconds: conint(ge=0)
     match_confidence: confloat(ge=0.0, le=1.0)
-
-    class Config:
-        extra = "ignore"
+    model_config = ConfigDict(extra="ignore")
 
 
 class BaseEvent(BaseModel):
@@ -86,11 +72,9 @@ class BaseEvent(BaseModel):
     zone_id: Optional[str] = None
     payload: Dict[str, Any]
     idempotency_key: str
+    model_config = ConfigDict(extra="ignore")
 
-    class Config:
-        extra = "ignore"
-
-    @validator("store_id", "visitor_id", "session_id", "idempotency_key")
+    @field_validator("store_id", "visitor_id", "session_id", "idempotency_key")
     def _non_empty(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("must be non-empty")
@@ -98,42 +82,46 @@ class BaseEvent(BaseModel):
 
 
 class EntryEvent(BaseEvent):
-    event_type: EventType = Field(default=EventType.ENTRY, const=True)
+    event_type: Literal[EventType.ENTRY] = Field(default=EventType.ENTRY)
     payload: EntryPayload
 
 
 class ExitEvent(BaseEvent):
-    event_type: EventType = Field(default=EventType.EXIT, const=True)
+    event_type: Literal[EventType.EXIT] = Field(default=EventType.EXIT)
     payload: ExitPayload
 
 
 class ZoneEnterEvent(BaseEvent):
-    event_type: EventType = Field(default=EventType.ZONE_ENTER, const=True)
+    event_type: Literal[EventType.ZONE_ENTER] = Field(default=EventType.ZONE_ENTER)
     payload: ZonePayload
 
 
 class ZoneExitEvent(BaseEvent):
-    event_type: EventType = Field(default=EventType.ZONE_EXIT, const=True)
+    event_type: Literal[EventType.ZONE_EXIT] = Field(default=EventType.ZONE_EXIT)
     payload: ZonePayload
 
 
 class ZoneDwellEvent(BaseEvent):
-    event_type: EventType = Field(default=EventType.ZONE_DWELL, const=True)
+    event_type: Literal[EventType.ZONE_DWELL] = Field(default=EventType.ZONE_DWELL)
     payload: ZoneDwellPayload
 
 
 class BillingQueueJoinEvent(BaseEvent):
-    event_type: EventType = Field(default=EventType.BILLING_QUEUE_JOIN, const=True)
+    event_type: Literal[EventType.BILLING_QUEUE_JOIN] = Field(
+        default=EventType.BILLING_QUEUE_JOIN
+    )
     payload: BillingQueueJoinPayload
 
 
 class BillingQueueAbandonEvent(BaseEvent):
-    event_type: EventType = Field(default=EventType.BILLING_QUEUE_ABANDON, const=True)
+    event_type: Literal[EventType.BILLING_QUEUE_ABANDON] = Field(
+        default=EventType.BILLING_QUEUE_ABANDON
+    )
     payload: BillingQueueAbandonPayload
 
 
 class ReentryEvent(BaseEvent):
-    event_type: EventType = Field(default=EventType.REENTRY, const=True)
+    event_type: Literal[EventType.REENTRY] = Field(default=EventType.REENTRY)
     payload: ReentryPayload
 
 
@@ -162,4 +150,4 @@ def parse_event(data: Dict[str, Any]) -> BaseEvent:
         raise ValueError(f"Unsupported event_type: {event_type}") from exc
 
     model = EVENT_MODEL_BY_TYPE[event_type_enum]
-    return model.parse_obj(data)
+    return model.model_validate(data)
