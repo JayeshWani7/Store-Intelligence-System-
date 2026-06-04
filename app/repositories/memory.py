@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
 
+from pipeline.layout import Layout
 from pipeline.schemas import BaseEvent, EventType
 
 
@@ -34,6 +35,18 @@ class MemoryStore:
         self.sessions: Dict[str, SessionRecord] = {}
         self.idempotency_keys: Set[str] = set()
         self.last_queue_depth_by_store: Dict[str, int] = {}
+        self._layouts: Dict[str, Layout] = {}
+        self._last_event_ts_by_store: Dict[str, datetime] = {}
+
+    def register_layout(self, store_id: str, layout: Layout) -> None:
+        """Register a store layout for anomaly detection zone checks."""
+        self._layouts[store_id] = layout
+
+    def get_layout(self, store_id: str) -> Optional[Layout]:
+        return self._layouts.get(store_id)
+
+    def get_last_event_ts(self, store_id: str) -> Optional[datetime]:
+        return self._last_event_ts_by_store.get(store_id)
 
     def insert_event(self, event: BaseEvent, raw_payload: Dict[str, Any]) -> bool:
         if event.idempotency_key in self.idempotency_keys:
@@ -44,6 +57,10 @@ class MemoryStore:
             "event": event,
             "payload": raw_payload,
         })
+
+        prev_ts = self._last_event_ts_by_store.get(event.store_id)
+        if prev_ts is None or event.event_ts > prev_ts:
+            self._last_event_ts_by_store[event.store_id] = event.event_ts
 
         session = self.sessions.get(event.session_id)
         if session is None:

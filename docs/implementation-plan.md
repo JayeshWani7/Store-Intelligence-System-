@@ -274,3 +274,12 @@
 ### Acceptance criteria
 
 - Docs consistent with the final implementation
+
+
+
+The plan says: "Defer dashboard and anomalies until API and metrics stabilize." API is stable. The highest-value gaps in order:
+
+Anomaly detection (Phase 7) — rules for queue spike, conversion drop, dead zone. Currently a stub that returns []. Quick win, high reviewer visibility.
+POS data ingest (Phase 6 gap) — load Brigade_Bangalore_10_April_26.csv and wire purchases into conversion attribution
+Test coverage (Phase 9) — re-entry, duplicates, zero-purchase scenarios
+Dashboard (Phase 8) — last, as planned
